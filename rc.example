@@ -1,0 +1,22 @@
+#!/bin/sh
+
+. /etc/rc.subr
+
+# Add the following lines to /etc/rc.conf to enable:
+# halfbaked_enable="YES"
+# halfbaked_ifname="eth0" # configure to whatever your interface name is
+
+name=halfbaked
+rcvar=halfbaked_enable
+
+load_rc_config $name
+
+command="/usr/sbin/daemon"
+pidfile="/var/run/${name}.pid"
+logfile="/var/log/${name}.log"
+loglevel=""
+command_args="-p ${pidfile} -o ${logfile} /usr/local/bin/${name} ${loglevel} ${halfbaked_ifname}"
+
+procname="/usr/local/bin/${name}"
+
+run_rc_command "$1" 
