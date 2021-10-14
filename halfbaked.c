@@ -200,7 +200,7 @@ void parse_packet(const struct bpf_hdr *bp) {
 	    */
 
 	    if (IPPROTO_TCP == ip_h->ip_p) {
-		struct tcphdr *tcph;
+		const struct tcphdr *tcph;
 
 		if (len >= (bp->bh_hdrlen + ETHHDRSIZ + IPHDRSIZ + TCPHDRSIZ)) {
 		    tcph = (struct tcphdr *)(p + bp->bh_hdrlen + ETHHDRSIZ + IPHDRSIZ);
@@ -315,7 +315,7 @@ int get_bpf(const char *ifname) {
 	}
     }
     if (-1 == bpf) {
-	fprintf(stderr, "couldn't open /dev/bpf\n");
+	fprintf(stderr, "couldn't open /dev/bpf, are you root?\n");
 	return(-1);
     }
 
@@ -389,7 +389,7 @@ int main (int argc, char **argv) {
 
     if (NULL == *argv) {
 	usage(); /* no ifname specified */
-	exit(0);
+	exit(1);
     }
      /* open bpf file descriptor */
     int bpf;
@@ -401,7 +401,7 @@ int main (int argc, char **argv) {
     int buflen = 0;
     if(ioctl(bpf, BIOCGBLEN, &buflen) < 0) {
 	fprintf(stderr, "BIOCGBLEN ioctl failed\n");
-	return(-1);
+	return(1);
     }
     char *fbuff = (char *) malloc(buflen);
     bzero(fbuff, buflen);

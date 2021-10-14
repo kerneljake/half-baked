@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# PROVIDE: halfbaked
+# REQUIRE: DAEMON
+# KEYWORD: shutdown
+
 . /etc/rc.subr
 
 # Add the following lines to /etc/rc.conf to enable:
