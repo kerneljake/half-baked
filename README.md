@@ -53,7 +53,7 @@ To run in the foreground, invoke it as root and provide the name of the ethernet
 # ./halfbaked bce1
 ```
 
-To run it as a daemon, copy the rc.example file to /usr/local/etc/rc.d/halfbaked and edit /etc/rc.conf as specified at the beginning of the example.  The nice thing about FreeBSD's daemon(8) facility is that takes care of all the details like logging and pid files.  You can then issue start/stop/restart commands like you would with any other daemon.
+To run it as a daemon, copy the rc.example file to /usr/local/etc/rc.d/halfbaked and edit /etc/rc.conf as specified at the beginning of the example.  The nice thing about FreeBSD's daemon(8) facility is that it takes care of all the details like logging and pid files.  You can then issue start/stop/restart commands like you would with any other daemon.
 
 There are logging options:
 
