@@ -231,7 +231,7 @@ void parse_packet(const struct bpf_hdr *bp) {
 				if (ep->syn_ack_count > 2 && (bpf_timestamp - ep->timestamp < 10000)) {
 				    /* guilty: ignored my SYN-ACK */
 				    if (verbose) {
-					printf("!!! GUILTY %s ignored my ACK %u\n", inet_ntoa(ip_h->ip_dst), ntohl(tcph->th_ack));
+					printf("GUILTY %s ignored my ACK %u\n", inet_ntoa(ip_h->ip_dst), ntohl(tcph->th_ack));
 				    }
 				    guilty(slot);
 				}
@@ -254,7 +254,7 @@ void parse_packet(const struct bpf_hdr *bp) {
 				ntohs(tcph->th_sport) == ep->port && (bpf_timestamp - ep->timestamp < 1000)) {
 				/* guilty: RST received in reply to my SYN-ACK */
 				if (verbose) {
-				    printf("!!! GUILTY %s replied RST to my ACK %u\n", inet_ntoa(ip_h->ip_src), ntohl(tcph->th_seq));
+				    printf("GUILTY %s replied RST to my ACK %u\n", inet_ntoa(ip_h->ip_src), ntohl(tcph->th_seq));
 				}
 				guilty(slot);
 			    }
