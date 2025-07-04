@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Copyright (c) 2021 Jake Angerman
+ * Copyright (c) 2025 Jake Angerman
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -53,7 +53,7 @@
 #define  IPHDRSIZ  (sizeof(struct ip))
 #define  TCPHDRSIZ (sizeof(struct tcphdr))
 
-#define NUM_SLOTS 128   /* set this to the pool size of blocked IPs */
+#define NUM_SLOTS 1024  /* set this to the pool size of blocked IPs */
 #define BASE_RULE 20000 /* set this to the ipfw base rule number */
 
 /* globals */
@@ -73,6 +73,7 @@ struct fingerprint {
     u_short syn_ack_count;
     tcp_seq ack;
     unsigned long timestamp; /* milliseconds */
+    int convicted;
 } evidence[NUM_SLOTS];
 
 /* Jenkins hash */
@@ -141,6 +142,7 @@ void guilty(const int slot) {
     static float tokens = bucket_size;
     static unsigned long last_check = 0;
 
+    ep->convicted = 1;
     if (0 == last_check) {
 	last_check = ep->timestamp; /* initial setup */
     }
@@ -150,7 +152,6 @@ void guilty(const int slot) {
 	tokens = bucket_size; /* capped */
     }
     if (tokens < 1.0) {
-	ep->ip.s_addr = 0; /* reset slot */
 	return;
     } else {
 	tokens -= 1.0;
@@ -176,7 +177,6 @@ void guilty(const int slot) {
 	}
 	exit(0);
     }
-    ep->ip.s_addr = 0; /* reset slot */
 }
 
 /* parse packet */
@@ -226,14 +226,15 @@ void parse_packet(const struct bpf_hdr *bp) {
 				ep->port = ntohs(tcph->th_dport);
 				ep->ack = ntohl(tcph->th_ack);
 				ep->timestamp = bpf_timestamp;
+				ep->convicted = 0;
 			    } else if (ntohl(tcph->th_ack) == ep->ack) {
 				ep->syn_ack_count++;
-				if (ep->syn_ack_count > 2 && (bpf_timestamp - ep->timestamp < 10000)) {
+				if (!ep->convicted && ep->syn_ack_count > 2 && (bpf_timestamp - ep->timestamp < 10000)) {
 				    /* guilty: ignored my SYN-ACK */
+				    guilty(slot);
 				    if (verbose) {
 					printf("GUILTY %s ignored my ACK %u\n", inet_ntoa(ip_h->ip_dst), ntohl(tcph->th_ack));
 				    }
-				    guilty(slot);
 				}
 			    }
 			}
@@ -250,13 +251,13 @@ void parse_packet(const struct bpf_hdr *bp) {
 			    }
 
 			    long bpf_timestamp = bp->bh_tstamp.tv_sec*1000 + bp->bh_tstamp.tv_usec/1000; /*millis*/
-			    if (suspect_ip == ep->ip.s_addr && ntohl(tcph->th_seq) == ep->ack &&
+			    if (!ep->convicted && suspect_ip == ep->ip.s_addr && ntohl(tcph->th_seq) == ep->ack &&
 				ntohs(tcph->th_sport) == ep->port && (bpf_timestamp - ep->timestamp < 1000)) {
 				/* guilty: RST received in reply to my SYN-ACK */
+				guilty(slot);
 				if (verbose) {
 				    printf("GUILTY %s replied RST to my ACK %u\n", inet_ntoa(ip_h->ip_src), ntohl(tcph->th_seq));
 				}
-				guilty(slot);
 			    }
 			}
 		    }

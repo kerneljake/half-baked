@@ -17,7 +17,7 @@ load_rc_config $name
 
 command="/usr/sbin/daemon"
 pidfile="/var/run/${name}.pid"
-logfile="/var/log/${name}.log"
+logfile="/var/log/${name}/${name}.log"
 loglevel=""
 command_args="-p ${pidfile} -o ${logfile} /usr/local/bin/${name} ${loglevel} ${halfbaked_ifname}"
 
